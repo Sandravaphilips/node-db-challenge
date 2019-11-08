@@ -7,9 +7,63 @@ const server = express();
 server.use(helmet())
 server.use(express.json())
 
+const convertToBoolean = async(req, res, next) => {
+    if (req.originalUrl === '/projects') {
+        const projects = await Project.getProjects();
+        const truthyOrFalsyProjects = projects.map(project => {
+            if(project.completed === 1){
+                return {...project, completed: true};
+            } else return {...project, completed: false};
+        })
+        req.value = truthyOrFalsyProjects
+        next()
+    } else if(req.originalUrl === '/tasks') {
+        const tasks = await Project.getTasks();
+        const truthyOrFalsyTasks = tasks.map(task => {
+            if(task.completed === 1){
+                return {...task, completed: true};
+            } else return {...task, completed: false};
+        })
+        req.value = truthyOrFalsyTasks
+        next()
+    } else if(req.url === '/projects/:id') {
+        const project = await Project.getProjectById(req.params.id);
+        let projectToRender;
+        if(project.completed === 1){
+            projectToRender =  {...project, completed: true};
+        } else{ 
+            projectToRender =  {...project, completed: false};
+        }
+        
+        req.value = projectToRender
+        next()
+    } 
+     
+}
+
+const validateId = (req, res, next) => {
+    const {id} = req.params;
+    if (!id) {
+      res.json({message: "please provide a valid id"})
+    } else {
+      next()
+    }
+};
+
+server.get('/projects/:id', validateId, async (req, res) => {
+    try {
+        const project = await Project.getProjectById(req.params.id);
+        res.status(200).json(project)
+        
+    } catch (err) {
+        res.status(500).json(err)
+    }
+})
+
 server.get('/projects', convertToBoolean, async(req, res) => {
     try {
-        res.status(200).json(req.projects)
+        res.status(200).json(req.value)
+        
     } catch (err) {
         res.status(500).json(err)
     }
@@ -26,7 +80,9 @@ server.get('/resources', async(req, res) => {
 
 server.get('/tasks', convertToBoolean, async(req, res) => {
     try {
-        res.status(200).json(req.tasks); 
+        
+        res.status(200).json(req.value);
+        
     } catch (err) {
         res.status(500).json(err)
     }
@@ -52,45 +108,16 @@ server.post('/resources', async(req, res) => {
     }
 })
 
-server.post('/projects/:id/tasks', validateId, async(req, res) => {
+server.post('/projects/:id/tasks',validateId, async(req, res) => {
     const {id} = req.params;
-    const {name, description, notes, completed} = req.body;
+    const { description, notes, completed} = req.body;
     try {
-        const newResource = await Project.addResource({name, description, notes, completed, project_id: id});
+        const newResource = await Project.addTask({ description, notes, completed, project_id: id});
         res.status(201).json(newResource);
     } catch (err) {
         res.status(500).json(err)
     }
 })
 
-const validateId = (req, res, next) => {
-    const {id} = req.params;
-    if (!id) {
-      res.json({message: "please provide a valid id"})
-    } else {
-      next()
-    }
-};
+module.exports = server;
 
-const convertToBoolean = async(req, res, next) => {
-    if (req.url = '/projects') {
-        const projects = await Project.getProjects();
-        const truthyOrFalsyProjects = projects.map(project => {
-            if(project.completed === 1){
-                return project.completed = true;
-            } else return project.completed = false;
-        })
-        req.projects = truthyOrFalsyProjects
-        next()
-    } else if( req.url === '/tasks') {
-        const tasks = await Project.getTasks();
-        const truthyOrFalsyTasks = tasks.map(task => {
-            if(task.completed === 1){
-                return task.completed = true;
-            } else return task.completed = false;
-        })
-        req.tasks = truthyOrFalsyTasks
-        next()
-    } 
-     
-}
