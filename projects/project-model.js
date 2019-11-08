@@ -27,14 +27,13 @@ function getProjects() {
     return db('projects');
 }
 
-function addTask(newTask) {
+function addTask(id, newTask) {
     return db('tasks')
         .insert(newTask);
 }
 
 function getTasks() {
-    return db('ProjectResources as pr')
-        .join('projects as p', 'p.id', 'pr.project_id')
-        .join('tasks as t', 't.id', 'pr.task_id')
+    return db('tasks as t')
+        .join('projects as p', 'p.id', 't.project_id')
         .select('t', 'p.name as projectName', 'p.description as projectDescription')
 }
