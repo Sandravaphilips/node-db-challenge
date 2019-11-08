@@ -1,14 +1,15 @@
 const express = require('express');
+const helmet = require('helmet');
 const Project = require('./project-model');
 
 const server = express();
 
+server.use(helmet())
 server.use(express.json())
 
-server.get('/projects', async(req, res) => {
+server.get('/projects', convertToBoolean, async(req, res) => {
     try {
-        const projects = await Project.getProjects();
-        res.status(200).json(projects)
+        res.status(200).json(req.projects)
     } catch (err) {
         res.status(500).json(err)
     }
@@ -23,10 +24,9 @@ server.get('/resources', async(req, res) => {
     }
 })
 
-server.get('/tasks', async(req, res) => {
+server.get('/tasks', convertToBoolean, async(req, res) => {
     try {
-       const tasks = await Project.getTasks();
-       res.status(200).json(tasks); 
+        res.status(200).json(req.tasks); 
     } catch (err) {
         res.status(500).json(err)
     }
@@ -52,7 +52,7 @@ server.post('/resources', async(req, res) => {
     }
 })
 
-server.post('/projects/:id/tasks', async(req, res) => {
+server.post('/projects/:id/tasks', validateId, async(req, res) => {
     const {id} = req.params;
     const {name, description, notes, completed} = req.body;
     try {
@@ -62,3 +62,35 @@ server.post('/projects/:id/tasks', async(req, res) => {
         res.status(500).json(err)
     }
 })
+
+const validateId = (req, res, next) => {
+    const {id} = req.params;
+    if (!id) {
+      res.json({message: "please provide a valid id"})
+    } else {
+      next()
+    }
+};
+
+const convertToBoolean = async(req, res, next) => {
+    if (req.url = '/projects') {
+        const projects = await Project.getProjects();
+        const truthyOrFalsyProjects = projects.map(project => {
+            if(project.completed === 1){
+                return project.completed = true;
+            } else return project.completed = false;
+        })
+        req.projects = truthyOrFalsyProjects
+        next()
+    } else if( req.url === '/tasks') {
+        const tasks = await Project.getTasks();
+        const truthyOrFalsyTasks = tasks.map(task => {
+            if(task.completed === 1){
+                return task.completed = true;
+            } else return task.completed = false;
+        })
+        req.tasks = truthyOrFalsyTasks
+        next()
+    } 
+     
+}

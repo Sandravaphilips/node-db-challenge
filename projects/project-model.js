@@ -27,7 +27,7 @@ function getProjects() {
     return db('projects');
 }
 
-function addTask(id, newTask) {
+function addTask(newTask) {
     return db('tasks')
         .insert(newTask);
 }
