@@ -26,17 +26,6 @@ const convertToBoolean = async(req, res, next) => {
         })
         req.value = truthyOrFalsyTasks
         next()
-    } else if(req.url === '/projects/:id') {
-        const project = await Project.getProjectById(req.params.id);
-        let projectToRender;
-        if(project.completed === 1){
-            projectToRender =  {...project, completed: true};
-        } else{ 
-            projectToRender =  {...project, completed: false};
-        }
-        
-        req.value = projectToRender
-        next()
     } 
      
 }
@@ -50,15 +39,7 @@ const validateId = (req, res, next) => {
     }
 };
 
-server.get('/projects/:id', validateId, async (req, res) => {
-    try {
-        const project = await Project.getProjectById(req.params.id);
-        res.status(200).json(project)
-        
-    } catch (err) {
-        res.status(500).json(err)
-    }
-})
+
 
 server.get('/projects', convertToBoolean, async(req, res) => {
     try {
@@ -99,6 +80,7 @@ server.post('/projects', async(req, res) => {
 })
 
 server.post('/resources', async(req, res) => {
+    
     const {name, description} = req.body;
     try {
         const newResource = await Project.addResource({name, description});
@@ -112,8 +94,8 @@ server.post('/projects/:id/tasks',validateId, async(req, res) => {
     const {id} = req.params;
     const { description, notes, completed} = req.body;
     try {
-        const newResource = await Project.addTask({ description, notes, completed, project_id: id});
-        res.status(201).json(newResource);
+        const newTask = await Project.addTask({ description, notes, completed, project_id: id});
+        res.status(201).json(newTask);
     } catch (err) {
         res.status(500).json(err)
     }

@@ -7,7 +7,6 @@ module.exports = {
     getResources,
     getProjects,
     getTasks,
-    getProjectById
 }
 
 function addResource(newResource) {
