@@ -101,5 +101,47 @@ server.post('/projects/:id/tasks',validateId, async(req, res) => {
     }
 })
 
+server.put('/projects/:id', validateId, async(req, res) => {
+    const {id} = req.params;
+    try {
+        const updatedProject = await Project.updateProject(id, req.body);
+        res.status(201).json(updatedProject);
+    } catch (err) {
+        res.status(500).json(err)
+    }
+})
+
+server.put('/tasks/:id', validateId, async(req, res) => {
+    const {id} = req.params;
+    try {
+        const updatedTask = await Project.updateTask(id, req.body);
+        res.status(200).json(updatedTask);
+    } catch (err) {
+        res.status(500).json(err)
+    }
+})
+
+server.delete('/projects/:id', validateId, async(req, res) => {
+    const {id} = req.params;
+    try {
+        const deletedProject = await Project.getById("projects", id);
+        await Project.deleteProject(id);
+        res.status(200).json(deletedProject);
+    } catch (err) {
+        res.status(500).json(err)
+    }
+})
+
+server.put('/tasks/:id', validateId, async(req, res) => {
+    const {id} = req.params;
+    try {
+        const deletedTask = await Project.getById('tasks', id);
+        await Project.deleteTask(id);
+        res.status(201).json(deletedTask);
+    } catch (err) {
+        res.status(500).json(err)
+    }
+})
+
 module.exports = server;
 
